@@ -1,0 +1,30 @@
+{
+  "name": "Dino Run",
+  "short_name": "Dino Run",
+  "description": "Corri nella giungla, scegli la strada, salta e raccogli frutti.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "/dino-run/",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "landscape",
+  "background_color": "#183f37",
+  "theme_color": "#183f37",
+  "categories": [
+    "games",
+    "kids"
+  ],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
