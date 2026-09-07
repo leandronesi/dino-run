@@ -16,7 +16,7 @@ assert(runSource.includes("G.text('VITE'"),'visible lives label missing');
 assert(runSource.includes('heartFlash'),'lives feedback missing');
 assert(runSource.includes("kind==='heart'"),'path hearts missing');
 assert(!runSource.includes("phase='camp'"),'heart recovery must not pause the run');
-assert(runSource.includes("kind==='log'&&S.jump")&&!runSource.includes("kind==='rock'&&S.jump"),'a rock must not be jumpable');
+assert(runSource.includes("kind==='rock'||kind==='log'"),'rocks and logs must be jumpable');
 function tick(){G.t+=1/60;scenes.run.update(1/60);}
 for(const level of [1,2]){
   G.level=level;scenes.run.enter();G.runStart();
@@ -39,9 +39,12 @@ for(const age of [1,2]){
 }
 G.level=1;scenes.run.enter();G.runStart();assert.equal(G.runState().rows.length,1);assert.equal(G.runState().rows[0].warmup,true);assert.equal(G.runState().speed,.40);
 G.level=2;scenes.run.enter();G.runStart();assert.equal(G.runState().speed,.52);
-G.level=1;scenes.run.enter();const originalRndi=G.rndi,forced=[0,0,0];G.rndi=()=>forced.length?forced.shift():originalRndi(0,2);G.runStart();let rockSeen=false,jumpedRock=false;
-for(let n=0;n<1200&&G.runState().lives===3;n++){const row=G.runState().rows.find(r=>r.cells.includes('rock')&&!r.hit);if(row){rockSeen=true;G.rndi=originalRndi;if(row.z>.72&&!jumpedRock){G.runAction('jump');jumpedRock=true;}}tick();}
-G.rndi=originalRndi;assert(rockSeen&&jumpedRock);assert.equal(G.runState().lives,2,'jumping on a rock must lose a life');
+G.level=1;scenes.run.enter();const originalRndi=G.rndi,forced=[0,0,0];G.rndi=()=>forced.length?forced.shift():originalRndi(0,2);G.runStart();let rockSeen=false,jumpedRock=false,rockCleared=false;
+for(let n=0;n<1200&&!rockCleared;n++){const row=G.runState().rows.find(r=>r.cells.includes('rock')&&!r.hit);if(row){rockSeen=true;G.rndi=originalRndi;if(row.z>.72&&!jumpedRock){G.runAction('jump');jumpedRock=true;}}else if(jumpedRock)rockCleared=true;tick();}
+G.rndi=originalRndi;assert(rockSeen&&jumpedRock&&rockCleared);assert.equal(G.runState().lives,3,'jumping over a rock must keep every life');
+scenes.run.enter();const forcedLog=[0,0,1];G.rndi=()=>forcedLog.length?forcedLog.shift():originalRndi(0,2);G.runStart();let logSeen=false;
+for(let n=0;n<1200&&G.runState().lives===3;n++){if(G.runState().rows.some(r=>r.cells.includes('log')&&!r.hit)){logSeen=true;G.rndi=originalRndi;}tick();}
+G.rndi=originalRndi;assert(logSeen);assert.equal(G.runState().lives,2,'missing a log must lose a life');
 let pathHeart=false;for(let n=0;n<12000&&G.runState().lives<3;n++){const s=G.runState(),row=s.rows.find(r=>!r.hit&&(r.cells.includes('heart')||r.cells.includes('fruit')));if(row){let lane=row.cells.indexOf('heart');if(lane>=0)pathHeart=true;else lane=row.cells.indexOf('fruit');G.runAction(lane<s.lane?'left':lane>s.lane?'right':'none');}tick();}
 assert(pathHeart,'a heart should appear on the path after a bump');assert.equal(G.runState().lives,3,'path heart should recover a life');assert.equal(G.runState().phase,'run');
 scenes.run.enter();G.runStart();G.runAction('pause');const before=G.runState().distance;scenes.run.update(30);assert.equal(G.runState().distance,before);
@@ -49,4 +52,4 @@ G.runAction('pause');for(let i=0;i<10;i++)G.runAction('left');assert.equal(G.run
 G.runAction('jump');assert(G.runState().jump>0);G.runAction('duck');assert(G.runState().duck>0&&G.runState().jump===0);
 const sibling=G.accounts.create({name:'Fratello'});G.accounts.login(sibling.id);assert.equal(G.save.run,undefined);G.accounts.login(p.id);assert.equal(G.save.run.runs,2);
 for(const name of ['accesso','menu','run']){if(scenes[name].enter)scenes[name].enter();scenes[name].draw(context);}
-console.log('PASS Dino Run: fast progressive pace, visible lives, rocks cannot be jumped, path hearts recover lives, both ages, safe paths, retry, pause, controls and separate records');
+console.log('PASS Dino Run: fast progressive pace, visible lives, rocks can be jumped, path hearts recover lives, both ages, safe paths, retry, pause, controls and separate records');

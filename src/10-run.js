@@ -8,7 +8,7 @@
     /* The first, harmless row makes the game feel alive instantly while still
        giving a child a moment to understand the three lanes. */
     S.rows.push({z:.24,cells:['fruit','fruit','fruit'],hit:false,warmup:true});
-    G.sfx('win');G.say('Via! Raccogli i frutti, evita i sassi e prendi i cuori.');
+    G.sfx('win');G.say('Via! Raccogli i frutti, salta i sassi e prendi i cuori.');
   }
   function action(a){
     if(a==='pause'){if(S.phase==='run'){S.phase='pause';G.hush();}else if(S.phase==='pause')S.phase='run';return;}
@@ -46,12 +46,12 @@
       if(!row.hit&&row.z>=.93){
         row.hit=true;S.passed++;
         var lane=Math.round(S.x),kind=row.cells[lane];
-        var good=kind==='fruit'||kind==='heart'||(kind==='log'&&S.jump>.15)||(kind==='branch'&&S.duck>.1);
+        var good=kind==='fruit'||kind==='heart'||((kind==='rock'||kind==='log')&&S.jump>.15)||(kind==='branch'&&S.duck>.1);
         if(good){
           if(kind==='heart'){S.lives=Math.min(3,S.lives+1);S.heartFlash=1.2;S.reason='Hai recuperato un cuore!';G.sfx('good');}
           else {S.combo++;S.score+=(kind==='fruit'?3:1)+(S.combo>=5?1:0);G.sfx('coin');}
         }
-        else if(S.shield<=0){S.combo=0;S.lives--;S.heartFlash=1;S.shield=2.8;S.reason=kind==='log'?'Salta il tronco':kind==='branch'?'Passa sotto il ramo':'Cambia corsia';G.say(S.reason);G.sfx('bad');if(S.lives<=0){end();return;}}
+        else if(S.shield<=0){S.combo=0;S.lives--;S.heartFlash=1;S.shield=2.8;S.reason=kind==='rock'?'Salta il sasso':kind==='log'?'Salta il tronco':kind==='branch'?'Passa sotto il ramo':'Cambia corsia';G.say(S.reason);G.sfx('bad');if(S.lives<=0){end();return;}}
       }
       if(row.z>1.15)S.rows.splice(i,1);
     }

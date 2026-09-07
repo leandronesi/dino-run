@@ -11,8 +11,8 @@ la prima fila è sempre di frutti, così si entra nel ritmo senza un urto
 immediato. Le vite hanno un riquadro dedicato in alto e i cuori pulsano dopo
 un impatto.
 Quando si perde un cuore, lungo il percorso iniziano a comparire cuori rosa:
-raccoglierne uno restituisce una vita senza interrompere la corsa. Il sasso
-si evita solo cambiando corsia: saltargli sopra non basta.
+raccoglierne uno restituisce una vita senza interrompere la corsa. I sassi e
+i tronchi si saltano; sotto i rami bisogna invece abbassarsi.
 
 Comandi: pulsanti grandi o swipe; su PC frecce, spazio per saltare, Esc
 per la pausa. Cambiare scheda mette il gioco in pausa.
