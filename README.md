@@ -6,6 +6,10 @@ ha almeno una corsia libera. Tre cuori; dopo un urto ci sono 2,8 secondi
 di protezione. A zero cuori si può riprovare subito.
 
 Il profilo Piccolo corre più lentamente e incontra ostacoli più distanziati.
+La corsa parte subito vivace e raggiunge la velocità massima in 55 secondi;
+la prima fila è sempre di frutti, così si entra nel ritmo senza un urto
+immediato. Le vite hanno un riquadro dedicato in alto e i cuori pulsano dopo
+un impatto.
 Ogni dodici file arriva una sosta al tempio: riconoscere il simbolo permette
 di recuperare un cuore. Nessun timer durante questa scelta.
 
