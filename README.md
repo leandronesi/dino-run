@@ -10,8 +10,9 @@ La corsa parte subito vivace e raggiunge la velocità massima in 55 secondi;
 la prima fila è sempre di frutti, così si entra nel ritmo senza un urto
 immediato. Le vite hanno un riquadro dedicato in alto e i cuori pulsano dopo
 un impatto.
-Ogni dodici file arriva una sosta al tempio: riconoscere il simbolo permette
-di recuperare un cuore. Nessun timer durante questa scelta.
+Quando si perde un cuore, lungo il percorso iniziano a comparire cuori rosa:
+raccoglierne uno restituisce una vita senza interrompere la corsa. Il sasso
+si evita solo cambiando corsia: saltargli sopra non basta.
 
 Comandi: pulsanti grandi o swipe; su PC frecce, spazio per saltare, Esc
 per la pausa. Cambiare scheda mette il gioco in pausa.

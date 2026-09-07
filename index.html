@@ -1693,13 +1693,13 @@ html, body {
 (function(){'use strict';
   var C=G.C,W=G.W,H=G.H,S={},touch=null;
   function saved(){var s=G.save.run||(G.save.run={best:0,runs:0});return s;}
-  function reset(){S={phase:'ready',lane:1,x:1,lives:3,score:0,distance:0,rows:[],timer:.52,jump:0,duck:0,shield:0,passed:0,campAt:12,target:0,reason:'',elapsed:0,speed:G.level===1?.40:.52,combo:0,heartFlash:0};}
+  function reset(){S={phase:'ready',lane:1,x:1,lives:3,score:0,distance:0,rows:[],timer:.52,jump:0,duck:0,shield:0,passed:0,reason:'',elapsed:0,speed:G.level===1?.40:.52,combo:0,heartFlash:0};}
   function start(){
     S.phase='run';
     /* The first, harmless row makes the game feel alive instantly while still
        giving a child a moment to understand the three lanes. */
     S.rows.push({z:.24,cells:['fruit','fruit','fruit'],hit:false,warmup:true});
-    G.sfx('win');G.say('Via! Raccogli i frutti e cambia strada.');
+    G.sfx('win');G.say('Via! Raccogli i frutti, evita i sassi e prendi i cuori.');
   }
   function action(a){
     if(a==='pause'){if(S.phase==='run'){S.phase='pause';G.hush();}else if(S.phase==='pause')S.phase='run';return;}
@@ -1715,7 +1715,11 @@ html, body {
     var kinds=['rock','log','branch'];
     var cells=['fruit','fruit','fruit'];cells[blocked]=kinds[G.rndi(0,2)];
     if(G.level===2&&S.passed>5)cells[(safe+2)%3]=kinds[G.rndi(0,2)];
-    cells[safe]='fruit';S.rows.push({z:0,cells:cells,hit:false});
+    /* A heart appears on the path only after a real bump. It stays on a
+       passable lane, so recovering a life is a short decision, never a pause. */
+    if(S.lives<3&&S.passed>0&&S.passed%7===0)cells[safe]='heart';
+    else cells[safe]='fruit';
+    S.rows.push({z:0,cells:cells,hit:false});
   }
   function update(dt){
     if(S.phase!=='run')return;
@@ -1733,15 +1737,16 @@ html, body {
       if(!row.hit&&row.z>=.93){
         row.hit=true;S.passed++;
         var lane=Math.round(S.x),kind=row.cells[lane];
-        var good=kind==='fruit'||(kind==='log'&&S.jump>.15)||(kind==='branch'&&S.duck>.1);
-        if(good){S.combo++;S.score+=(kind==='fruit'?3:1)+(S.combo>=5?1:0);G.sfx('coin');}
+        var good=kind==='fruit'||kind==='heart'||(kind==='log'&&S.jump>.15)||(kind==='branch'&&S.duck>.1);
+        if(good){
+          if(kind==='heart'){S.lives=Math.min(3,S.lives+1);S.heartFlash=1.2;S.reason='Hai recuperato un cuore!';G.sfx('good');}
+          else {S.combo++;S.score+=(kind==='fruit'?3:1)+(S.combo>=5?1:0);G.sfx('coin');}
+        }
         else if(S.shield<=0){S.combo=0;S.lives--;S.heartFlash=1;S.shield=2.8;S.reason=kind==='log'?'Salta il tronco':kind==='branch'?'Passa sotto il ramo':'Cambia corsia';G.say(S.reason);G.sfx('bad');if(S.lives<=0){end();return;}}
       }
       if(row.z>1.15)S.rows.splice(i,1);
     }
-    if(S.passed>=S.campAt){S.campAt+=12;S.phase='camp';S.target=G.rndi(0,2);G.say('Una sosta! Trova lo stesso simbolo per recuperare un cuore.');}
   }
-  function campChoice(i){if(S.phase!=='camp')return false;if(i!==S.target){G.say('Guarda ancora il simbolo sul tempio.');return false;}S.lives=Math.min(3,S.lives+1);S.shield=2.8;S.phase='run';G.sfx('good');return true;}
   function polygon(c,points,col){c.fillStyle=col;c.beginPath();points.forEach(function(p,i){if(i)c.lineTo(p[0],p[1]);else c.moveTo(p[0],p[1]);});c.closePath();c.fill();}
   function ground(z,lane){var p=z*z;return{x:640+(lane-1)*(30+280*p),y:262+405*p,s:.15+1.1*p};}
   function world(c){
@@ -1770,6 +1775,7 @@ html, body {
     c.save();c.translate(p.x,p.y);c.scale(p.s,p.s);c.lineWidth=5;c.strokeStyle='#3d4f3d';
     c.fillStyle='#26473444';c.beginPath();c.ellipse(0,5,46,12,0,0,7);c.fill();
     if(kind==='fruit'){A.fruit(c,0,-28,23);}
+    else if(kind==='heart'){A.SHAPES.cuore(c,0,-45,34,C.pinkPop);}
     else if(kind==='rock'){polygon(c,[[-48,0],[-40,-48],[-8,-74],[32,-58],[50,0]],'#899789');c.stroke();polygon(c,[[-8,-74],[32,-58],[50,0],[4,-12]],'#6c8074');}
     else if(kind==='log'){c.fillStyle='#aa7649';G.roundRect(c,-55,-39,110,39,14);c.fill();c.stroke();c.fillStyle='#e7bd7d';c.beginPath();c.ellipse(43,-20,15,18,0,0,7);c.fill();c.stroke();}
     else {c.fillStyle='#82653d';c.fillRect(-57,-130,13,130);c.fillRect(44,-130,13,130);G.roundRect(c,-67,-137,134,32,12);c.fill();c.stroke();c.fillStyle='#78a953';c.beginPath();c.ellipse(34,-145,47,20,-.2,0,7);c.fill();}
@@ -1813,9 +1819,6 @@ html, body {
       panel(c,'Dino Run','Tre cuori e una giungla da esplorare');
       G.text('← → cambia strada   ↑ salta   ↓ passa sotto',640,343,{size:27,color:C.ink});
       G.ui.button({id:'run-start',x:440,y:410,w:400,h:112,r:28,color:C.leaf,label:'VIA!',onTap:start});
-    } else if(S.phase==='camp'){
-      panel(c,'Una sosta al tempio','Trova lo stesso simbolo: recuperi un cuore');sign(c,S.target,640,343,34);
-      for(var choice=0;choice<3;choice++)(function(i){G.ui.button({id:'camp-'+i,x:400+i*170,y:411,w:140,h:112,r:24,color:'#e6dbbe',icon:function(cc,x,y){sign(cc,i,x,y,33);},onTap:function(){campChoice(i);}});})(choice);
     } else {
       panel(c,S.phase==='over'?'Bella corsa!':'Facciamo una pausa',S.phase==='over'?'Frutti '+S.score+' · Record '+saved().best:'Riparti quando vuoi');
       G.ui.button({id:'run-again',x:345,y:391,w:280,h:112,r:26,color:C.leaf,label:S.phase==='over'?'Riprova':'Continua',onTap:function(){if(S.phase==='over'){reset();start();}else action('pause');}});
@@ -1827,7 +1830,7 @@ html, body {
   window.addEventListener('keydown',function(e){if(G.current!=='run'||e.repeat)return;var a={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'jump',ArrowDown:'duck',' ':'jump',Escape:'pause'}[e.key];if(a){e.preventDefault();action(a);}});
   document.addEventListener('visibilitychange',function(){if(document.hidden){touch=null;if(G.current==='run'&&S.phase==='run')S.phase='pause';}});
   G.scene('menu',{hud:false,back:false,draw:function(c){if(!S.phase)reset();world(c);G.text('DINO RUN',640,155,{size:88,color:C.cream,stroke:C.leafDeep,strokeWidth:14});A.dino(c,640,440,230,{color:G.account.color,t:G.t});G.text('Il tuo record: '+saved().best+' frutti',640,490,{size:29,color:C.cream,stroke:C.leafDeep});G.ui.button({id:'play',x:430,y:555,w:420,h:116,r:30,color:C.leaf,label:'CORRI!',onTap:function(){G.go('run');}});G.ui.button({id:'profiles',x:24,y:566,w:300,h:100,color:C.water,label:'Cambia dino',onTap:function(){G.accounts.logout();G.go('accesso');}});G.ui.button({id:'parents',x:975,y:566,w:280,h:100,color:C.bark,label:'Genitori',onTap:function(){G.go('gate');}});}});
-  G.runState=function(){return JSON.parse(JSON.stringify(S));};G.runAction=action;G.runStart=start;G.runCampChoice=campChoice;
+  G.runState=function(){return JSON.parse(JSON.stringify(S));};G.runAction=action;G.runStart=start;
 })();
 
 
