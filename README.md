@@ -1,30 +1,34 @@
 # Dino Run
 
-Gioco canvas per bambini, senza librerie o risorse esterne. Tre corsie,
-tronchi da saltare, rami sotto cui passare e massi da evitare. Ogni fila
-ha almeno una corsia libera. Tre cuori; dopo un urto ci sono 2,8 secondi
-di protezione. A zero cuori si può riprovare subito.
+Corsa infinita sui binari della giungla, nella famiglia di Subway Surfers.
+Canvas, senza librerie né risorse esterne.
 
-Il profilo Piccolo corre più lentamente e incontra ostacoli più distanziati.
-La corsa parte subito vivace e raggiunge la velocità massima in 55 secondi;
-la prima fila è sempre di frutti, così si entra nel ritmo senza un urto
-immediato. Le vite hanno un riquadro dedicato in alto e i cuori pulsano dopo
-un impatto.
-Quando si perde un cuore, lungo il percorso iniziano a comparire cuori rosa:
-raccoglierne uno restituisce una vita senza interrompere la corsa. I sassi e
-i tronchi si saltano; sotto i rami bisogna invece abbassarsi.
+- **Tre binari** con vagoni lunghi da schivare, vagoni con la **rampa** su cui
+  salire e correre sopra, vagoni che vengono incontro (solo Grande), tronchi
+  da saltare, rami sotto cui rotolare, massi.
+- **File e archi di frutti** che mostrano la strada; ogni frutto conta.
+- **Power-up**: calamita (i frutti vengono da te), molla (salti altissimi,
+  anche sopra i vagoni), pterodattilo (voli sopra tutto e prendi i frutti in
+  cielo).
+- Tre cuori; un urto dà 2,2 secondi di protezione e rallenta un attimo. Quando
+  manca un cuore, sul percorso ne compare uno. La velocità sale per circa 80
+  secondi.
+- **Piccolo** (3 anni): più lento, niente vagoni in arrivo, e in ogni tratto c'è
+  sempre un binario libero: basta cambiare binario, saltare e rotolare non
+  servono mai. **Grande** (6 anni): più veloce, tratti in cui bisogna saltare,
+  rotolare o salire sulla rampa.
 
-Comandi: pulsanti grandi o swipe; su PC frecce, spazio per saltare, Esc
-per la pausa. Cambiare scheda mette il gioco in pausa.
-
-L'accesso segue Dino Giungla: nome, dinosauro colorato, età e tre figure
-facoltative. Profili e record locali separati; nessun account online.
+Comandi: scorri col dito (sinistra/destra, su per saltare, giù per rotolare)
+oppure tocca la metà sinistra o destra dello schermo. Su PC frecce o WASD,
+spazio per saltare, Esc per la pausa.
 
 ```
 node build.js
-node test/smoke.js
+node test/smoke.js         # ~2 minuti: un bot corre due minuti per età senza un urto
+node test/smoke.js quick   # solo le regole
+node test/look.js          # Chrome vero, muto: fotogrammi in test/frames e tocchi reali
 ```
 
-Servire la cartella con un server HTTP. Per tutta la collezione:
-`node ../dino-giungla/tools/serve-collection.js`, poi http://localhost:8088.
-Per installare la PWA e usare la cache offline serve HTTPS o localhost.
+Il collaudo lungo esiste perché ogni tratto (in `PATTERNS`, dentro
+`src/10-run.js`) deve avere una via d'uscita anche specchiato e concatenato
+alla velocità massima; per il Piccolo il bot può soltanto cambiare binario.
