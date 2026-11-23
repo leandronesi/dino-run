@@ -102,7 +102,7 @@
     S = {
       phase: 'ready', t: 0, time: 0, z: 0, dist: 0, v: tune().v0, seed: seed === undefined ? (Date.now() & 0xffff) : seed,
       obs: [], nextZ: 30, lastPower: 60, lastHeart: 0, lastPat: '', powers: 0, nobs: 0,
-      hearts: 3, fruit: 0, combo: 0, shield: 0, slow: 0, mag: 0, spring: 0, reason: '', reasonT: 0, heartFlash: 0, nudge: 0, timer: 0,
+      hearts: 3, fruit: 0, combo: 0, shield: 0, slow: 0, mag: 0, spring: 0, reason: '', reasonT: 0, heartFlash: 0, nudge: 0, timer: 0, jumpBuffer: 0,
       p: { lane: 1, x: 1, y: 0, vy: 0, roll: 0, fly: 0 }
     };
     // a first line of fruit right away: the child sees the point of the game in the first second
@@ -131,7 +131,7 @@
   }
 
   function action(a) {
-    if (a === 'pause') { if (S.phase === 'run') { S.phase = 'pause'; G.hush(); } else if (S.phase === 'pause') S.phase = 'run'; return; }
+    if (a === 'pause') { if (S.phase === 'run') { S.phase = 'pause'; S.jumpBuffer = 0; touch = null; G.hush(); } else if (S.phase === 'pause') S.phase = 'run'; return; }
     if (S.phase !== 'run') return;
     var p = S.p, tn = tune();
     if (a === 'left' || a === 'right') {
@@ -140,8 +140,14 @@
       if (p.fly <= 0 && tallAt(to, S.z, p.y)) { S.nudge = a === 'left' ? -.3 : .3; sfx('bad'); if (!quiet) G.shake(3); return; }
       p.lane = to; sfx('whoosh');
     }
-    if (a === 'jump' && p.fly <= 0 && p.y - baseAt(p.x, S.z) < .05) { p.vy = S.spring > 0 ? tn.superJump : tn.jump; p.roll = 0; sfx('pop'); }
-    if (a === 'duck' && p.fly <= 0) { p.roll = .62; if (p.y - baseAt(p.x, S.z) > .05) p.vy = Math.min(p.vy, -12); sfx('tap'); }
+    if (a === 'jump' && p.fly <= 0) {
+      if (p.vy === 0 && Math.abs(p.y - baseAt(p.x, S.z)) < .05) jump(p, tn);
+      else if (p.vy < 0) S.jumpBuffer = .16;
+    }
+    if (a === 'duck' && p.fly <= 0) { S.jumpBuffer = 0; p.roll = .62; if (p.y - baseAt(p.x, S.z) > .05) p.vy = Math.min(p.vy, -12); sfx('tap'); }
+  }
+  function jump(p, tn) {
+    S.jumpBuffer = 0; p.vy = S.spring > 0 ? tn.superJump : tn.jump; p.roll = 0; sfx('pop');
   }
 
   function hit(o, reason) {
@@ -164,7 +170,7 @@
     if (o.type === 'magnet') { S.mag = 10; say('Calamita! I frutti vengono da te'); }
     if (o.type === 'spring') { S.spring = 10; say('Molla! Salti altissimo'); }
     if (o.type === 'ptero') {
-      S.p.fly = 6; S.p.roll = 0; say('Lo pterodattilo ti porta in volo!');
+      S.p.fly = 6; S.p.roll = 0; S.jumpBuffer = 0; say('Lo pterodattilo ti porta in volo!');
       for (var i = 0; i < 36; i++) S.obs.push({ k: 'fruit', lane: 1 + Math.round(Math.sin(i / 5)), z: S.z + 16 + i * 3, y: 4.4, got: false, kind: i % 4, sky: true });
     }
   }
@@ -180,6 +186,7 @@
     S.slow = Math.max(0, S.slow - DT); S.shield = Math.max(0, S.shield - DT); S.mag = Math.max(0, S.mag - DT); S.spring = Math.max(0, S.spring - DT);
     S.heartFlash = Math.max(0, S.heartFlash - DT); S.reasonT = Math.max(0, S.reasonT - DT);
     S.nudge *= Math.exp(-DT * 12);
+    S.jumpBuffer = Math.max(0, S.jumpBuffer - DT);
     var dz = S.v * DT; S.z += dz; S.dist += dz;
 
     // wagons that come at you start moving only when close, so they sweep their own pattern only
@@ -196,6 +203,7 @@
       p.vy -= tn.g * DT; p.y += p.vy * DT;
       if (p.y <= base && base - p.y < .45) { p.y = base; p.vy = 0; }
       if (p.y < 0) { p.y = 0; p.vy = 0; }
+      if (S.jumpBuffer > 0 && p.vy === 0 && Math.abs(p.y - base) < .05) jump(p, tn);
     }
 
     for (i = S.obs.length - 1; i >= 0; i--) {
@@ -223,7 +231,9 @@
   }
   function end() {
     S.phase = 'over';
-    var s = saved(); s.runs++; s.last = Math.floor(S.dist); s.bestM = Math.max(s.bestM, Math.floor(S.dist)); s.bestF = Math.max(s.bestF, S.fruit); G.saveNow();
+    var s = saved(), metres = Math.floor(S.dist);
+    S.newRecord = s.runs > 0 && metres > s.bestM;
+    s.runs++; s.last = metres; s.bestM = Math.max(s.bestM, metres); s.bestF = Math.max(s.bestF, S.fruit); G.saveNow();
     say('Bella corsa! ' + Math.floor(S.dist) + ' metri');
   }
 
@@ -520,7 +530,7 @@
       panel(c, over ? 'Bella corsa!' : 'Pausa', over ? Math.floor(S.dist) + ' metri  ·  ' + S.fruit + ' frutti' : 'Riparti quando vuoi');
       if (over) {
         G.text('Record: ' + s.bestM + ' metri  ·  ' + s.bestF + ' frutti', 640, 320, { size: 26, color: C.leafDeep });
-        if (s.last >= s.bestM && s.runs > 1) G.text('NUOVO RECORD!', 640, 380, { size: 40, color: C.tangerine });
+        if (S.newRecord) G.text('NUOVO RECORD!', 640, 380, { size: 40, color: C.tangerine });
       }
       G.ui.button({ id: 'run-again', x: 330, y: 440, w: 300, h: 110, r: 26, color: C.leaf, label: over ? 'Riprova' : 'Continua', onTap: function () { if (over) { reset(); start(); } else action('pause'); } });
       G.ui.button({ id: 'run-menu', x: 650, y: 440, w: 300, h: 110, r: 26, color: C.tangerine, label: 'Menu', onTap: function () { G.go('menu'); } });
@@ -556,7 +566,7 @@
     var a = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'duck', ' ': 'jump', Escape: 'pause', a: 'left', d: 'right', w: 'jump', s: 'duck' }[e.key];
     if (a) { e.preventDefault(); action(a); }
   });
-  document.addEventListener('visibilitychange', function () { if (document.hidden) { touch = null; if (G.current === 'run' && S && S.phase === 'run') S.phase = 'pause'; } });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && G.current === 'run' && S && S.phase === 'run') action('pause'); });
 
   G.scene('menu', {
     hud: false, back: false,

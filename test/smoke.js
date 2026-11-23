@@ -76,6 +76,15 @@ track(1,[{k:'power',lane:1,z:10,y:.8,got:false,type:'magnet'}].concat([0,2].flat
 track(1,[{k:'power',lane:1,z:10,y:.8,got:false,type:'ptero'}]);frames(150);assert(S().p.y>3,'the pterodactyl flies');frames(60*6);assert(S().p.y<.1,'and lands again');
 fresh(2,3);G.runAction('pause');const z0=S().z;frames(200);assert.equal(S().z,z0,'pause freezes the run');G.runAction('pause');
 fresh(2,3);for(let i=0;i<5;i++)G.runAction('left');assert.equal(S().p.lane,0);
+track(2,[]);
+S().p.y=.3;S().p.vy=-4;
+G.runAction('jump');
+frames(10);
+assert(S().p.vy>0,'a jump just before landing must be buffered');
+G.save.run={runs:2,last:124,bestM:124,bestF:30};
+S().dist=124.9;S().phase='dying';S().timer=0;
+R.step();
+assert.strictEqual(S().newRecord,false,'matching the rounded distance is not a new record');
 
 // ---- Piccolo is slower and never meets Grande-only patterns
 fresh(1,11);for(let i=0;i<60*90;i++){S().shield=5;R.step();assert(!S().obs.some(o=>o.k==='M'),'no oncoming wagons for Piccolo');}
